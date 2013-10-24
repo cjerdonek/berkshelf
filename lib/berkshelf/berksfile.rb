@@ -497,6 +497,20 @@ module Berkshelf
       do_upload(cached_cookbooks, options)
     end
 
+    # Resolve this Berksfile and fold the cookbook versions found in the
+    # generated Berksfile.lock into a Chef environment hash
+    #
+    # @param [Hash] environment
+    #   a hash representation of a Chef environment.
+    #
+    # @option options [Boolean] :sorted (true)
+    #   Whether to insert the cookbooks into the hash in order by name.
+    def fold(environment, options = {})
+      install
+
+      environment[:cookbook_versions] = lockfile.to_cookbook_versions(options)
+    end
+
     # Resolve this Berksfile and apply the locks found in the generated Berksfile.lock to the
     # target Chef environment
     #
@@ -517,6 +531,7 @@ module Berkshelf
 
         install
 
+        # TODO: share code with lockfile.to_cookbook_versions.
         environment.cookbook_versions = {}.tap do |cookbook_versions|
           lockfile.dependencies.each { |dependency| cookbook_versions[dependency.name] = "= #{dependency.locked_version.to_s}" }
         end

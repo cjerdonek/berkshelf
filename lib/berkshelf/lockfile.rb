@@ -116,6 +116,16 @@ module Berkshelf
     end
     alias_method :unlock, :remove
 
+    # @return [Hash]
+    #   a hash representation of this lockfile suitable as the cookbook_versions
+    #   value of a Chef environment.
+    def to_cookbook_versions(options = {})
+      {}.tap do |cookbook_versions|
+        deps = options[:sorted] ? dependencies.sort_by{ |key, val| key.name } : dependencies
+        deps.each { |dependency| cookbook_versions[dependency.name] = "= #{dependency.locked_version.to_s}" }
+      end
+    end
+
     # @return [String]
     #   the string representation of the lockfile
     def to_s

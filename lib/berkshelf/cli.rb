@@ -262,6 +262,36 @@ module Berkshelf
       desc: 'Path to a Berksfile to operate off of.',
       aliases: '-b',
       banner: 'PATH'
+    method_option :no_sort,
+      type: :boolean,
+      default: false,
+      desc: 'Suppress sorting the cookbooks by name.'
+    desc 'fold PATH', 'Fold the cookbook version locks from Berksfile.lock into a Chef environment file'
+    def fold(environment_path)
+      begin
+        contents = File.read(environment_path).strip
+      rescue
+        if !File.exists?(environment_path)
+          # TODO: make a custom error class.
+          raise BerkshelfError.new(environment_path)
+        end
+      end
+      # TODO: raise an error if does not parse.
+      environment = JSON.parse(contents, symbolize_names: true)
+
+      berksfile = Berkshelf::Berksfile.from_file(options[:berksfile])
+
+      berksfile.fold(environment, sorted: !options[:no_sort])
+
+      puts JSON.pretty_generate(environment)
+    end
+
+    method_option :berksfile,
+      type: :string,
+      default: Berkshelf::DEFAULT_FILENAME,
+      desc: 'Path to a Berksfile to operate off of.',
+      aliases: '-b',
+      banner: 'PATH'
     method_option :ssl_verify,
       type: :boolean,
       default: nil,
